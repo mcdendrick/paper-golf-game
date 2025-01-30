@@ -27,6 +27,10 @@ export type GameState = {
   path: PathSegment[];
   lastRoll: number | null;
   gameOver: boolean;
+  mulligansUsed: number;
+  hasUsedFreeTee: boolean;
+  puttableSquares: Position[];
+  isPutting: boolean;
 };
 
 export type Grid = CellType[][];
