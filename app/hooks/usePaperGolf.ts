@@ -120,37 +120,6 @@ export const usePaperGolf = () => {
     }));
   }, []);
 
-  const rollDice = useCallback(() => {
-    if (gameState.gameOver || gameState.isPutting) return;
-    
-    const roll = Math.floor(Math.random() * 6) + 1;
-    const newValidMoves = getValidMoves(gameState.ballPosition, roll);
-    
-    setGameState(prev => ({
-      ...prev,
-      lastRoll: roll,
-      puttableSquares: []
-    }));
-    setValidMoves(newValidMoves);
-  }, [gameState.gameOver, gameState.isPutting, gameState.ballPosition]);
-
-  const useMulligan = useCallback(() => {
-    if (gameState.gameOver) return;
-    if (!gameState.lastRoll) return;
-    
-    // Check if we can use a mulligan
-    const isFirstTee = gameState.strokes === 0 && !gameState.hasUsedFreeTee;
-    if (!isFirstTee && gameState.mulligansUsed >= MAX_MULLIGANS) return;
-    
-    setGameState(prev => ({
-      ...prev,
-      mulligansUsed: isFirstTee ? prev.mulligansUsed : prev.mulligansUsed + 1,
-      hasUsedFreeTee: isFirstTee ? true : prev.hasUsedFreeTee,
-      lastRoll: null
-    }));
-    setValidMoves([]);
-  }, [gameState.gameOver, gameState.lastRoll, gameState.strokes, gameState.mulligansUsed, gameState.hasUsedFreeTee]);
-
   const getValidMoves = useCallback((position: Position, rollValue: number): Position[] => {
     const { x, y } = position;
     const currentCell = grid[y][x];
@@ -210,6 +179,37 @@ export const usePaperGolf = () => {
     
     return validMoves;
   }, [grid]);
+
+  const rollDice = useCallback(() => {
+    if (gameState.gameOver || gameState.isPutting) return;
+    
+    const roll = Math.floor(Math.random() * 6) + 1;
+    const newValidMoves = getValidMoves(gameState.ballPosition, roll);
+    
+    setGameState(prev => ({
+      ...prev,
+      lastRoll: roll,
+      puttableSquares: []
+    }));
+    setValidMoves(newValidMoves);
+  }, [gameState.gameOver, gameState.isPutting, gameState.ballPosition, getValidMoves]);
+
+  const useMulligan = useCallback(() => {
+    if (gameState.gameOver) return;
+    if (!gameState.lastRoll) return;
+    
+    // Check if we can use a mulligan
+    const isFirstTee = gameState.strokes === 0 && !gameState.hasUsedFreeTee;
+    if (!isFirstTee && gameState.mulligansUsed >= MAX_MULLIGANS) return;
+    
+    setGameState(prev => ({
+      ...prev,
+      mulligansUsed: isFirstTee ? prev.mulligansUsed : prev.mulligansUsed + 1,
+      hasUsedFreeTee: isFirstTee ? true : prev.hasUsedFreeTee,
+      lastRoll: null
+    }));
+    setValidMoves([]);
+  }, [gameState.gameOver, gameState.lastRoll, gameState.strokes, gameState.mulligansUsed, gameState.hasUsedFreeTee]);
 
   const handleMove = useCallback((x: number, y: number) => {
     if (gameState.gameOver) return;

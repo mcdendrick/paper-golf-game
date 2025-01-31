@@ -1,5 +1,5 @@
 import React from 'react';
-import { CELL_TYPES, type Position, type Grid } from '../../types/paper-golf';
+import { CELL_TYPES, type Position, type Grid, type GameState } from '../../types/paper-golf';
 
 interface GameBoardProps {
   grid: Grid;
@@ -8,6 +8,7 @@ interface GameBoardProps {
   validMoves: Position[];
   puttableSquares: Position[];
   onCellClick: (x: number, y: number) => void;
+  gameState: GameState;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
@@ -17,6 +18,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   validMoves,
   puttableSquares,
   onCellClick,
+  gameState,
 }) => {
   type PathDirection = { dx: number; dy: number };
   
@@ -103,7 +105,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const isPuttable = puttableSquares.some(square => square.x === x && square.y === y);
     const pathStyle = getPathStyle(x, y);
     
-    const baseStyle = "w-7 h-7 border border-gray-700/20 cursor-pointer flex items-center justify-center relative";
+    const baseStyle = "w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 border border-gray-700/20 cursor-pointer flex items-center justify-center relative";
     
     let backgroundColor = "bg-green-800"; // Rough
     if (cellType === CELL_TYPES.FAIRWAY) backgroundColor = "bg-green-500";
@@ -111,7 +113,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (cellType === CELL_TYPES.WATER) backgroundColor = "bg-blue-500";
     if (cellType === CELL_TYPES.TREE) backgroundColor = "bg-green-900";
     if (cellType === CELL_TYPES.HOLE) backgroundColor = "bg-black";
-    if (cellType === CELL_TYPES.START) backgroundColor = "bg-purple-500"; // Changed back to purple
+    if (cellType === CELL_TYPES.START) backgroundColor = "bg-purple-500";
     
     const highlightStyle = isValidMove ? 'ring-2 ring-yellow-300 ring-opacity-100 animate-pulse' : '';
     const puttableStyle = isPuttable ? 'ring-2 ring-green-300 ring-opacity-100' : '';
@@ -121,8 +123,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="relative p-2">
-      <div className="grid grid-rows-15 gap-0 relative w-fit">
+    <div className="relative p-2 overflow-x-auto">
+      <div className="grid grid-rows-15 gap-0 relative w-fit mx-auto">
         {grid.map((row, y) => (
           <div key={y} className="flex flex-row">
             {row.map((cell, x) => (
@@ -132,27 +134,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 onClick={() => onCellClick(x, y)}
               >
                 {ballPosition.x === x && ballPosition.y === y && (
-                  <div className="w-3 h-3 rounded-full bg-white z-10" />
+                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-white z-10" />
                 )}
                 {cell === CELL_TYPES.HOLE && (
-                  <div className="w-2 h-2 rounded-full bg-gray-700 absolute" />
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-700 absolute" />
                 )}
                 {cell === CELL_TYPES.TREE && (
-                  <span className="text-[10px]">🌲</span>
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px]">🌲</span>
                 )}
                 {isPartOfPath(x, y, 'dot') && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-white" />
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />
                   </div>
                 )}
                 {validMoves.some(move => move.x === x && move.y === y) && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping" />
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-yellow-300 animate-ping" />
                   </div>
                 )}
                 {puttableSquares.some(square => square.x === x && square.y === y) && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-300" />
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-300" />
                   </div>
                 )}
               </div>
@@ -160,9 +162,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         ))}
       </div>
-      <div className="mt-4">
+      {gameState.gameOver && (
+        <div className="mt-4 mb-2 p-3 sm:p-4 bg-green-100 text-green-800 rounded-lg text-sm sm:text-base border-2 border-green-200 shadow-lg">
+          <p className="font-bold text-center">🎉 Hole in {gameState.strokes}! 🎉</p>
+          <p className="text-center">
+            {gameState.strokes <= gameState.course.par 
+              ? 'Great job! You made par or better!' 
+              : `Try again to beat par (${gameState.course.par} strokes)!`}
+          </p>
+        </div>
+      )}
+      <div className="mt-4 text-sm">
         <h3 className="font-bold mb-2">Legend:</h3>
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
           <div>🟩 Fairway (+1 to roll)</div>
           <div>🟨 Sand (-1 to roll)</div>
           <div className="flex items-center gap-1">
@@ -175,7 +187,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <span>Starting Tee</span>
           </div>
         </div>
-        <div className="mt-2 text-sm text-gray-600">
+        <div className="mt-2 text-xs sm:text-sm text-gray-600">
           <p>• Choose to putt (1 square) or roll dice for a longer shot</p>
           <p>• You get 6 mulligans per round</p>
           <p>• First tee shot gets a free mulligan</p>

@@ -21,16 +21,16 @@ export const PaperGolfGame: React.FC = () => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardContent className="p-6">
-        <div className="mb-4 flex justify-between items-start">
-          <div className="w-[300px]">
-            <div className="flex items-center gap-4 mb-2">
-              <h2 className="text-2xl font-bold whitespace-nowrap">{gameState.course.name}</h2>
-              <span className="text-lg text-gray-600 whitespace-nowrap">
+      <CardContent className="p-4 sm:p-6">
+        <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="w-full sm:w-[300px]">
+            <div className="flex items-center gap-2 sm:gap-4 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">{gameState.course.name}</h2>
+              <span className="text-base sm:text-lg text-gray-600 whitespace-nowrap">
                 Hole {gameState.course.currentHole} of {gameState.course.totalHoles}
               </span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 text-sm sm:text-base">
               <p>Strokes: {gameState.strokes} {gameState.strokes > gameState.course.par ? '(Over Par)' : ''}</p>
               <p className="text-gray-600">Par: {gameState.course.par}</p>
               <p>Mulligans: {6 - gameState.mulligansUsed} remaining</p>
@@ -42,47 +42,53 @@ export const PaperGolfGame: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="space-y-2 w-[200px]">
-            {!gameState.isPutting && (
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:w-[200px]">
+            {/* Top Left: Roll Dice */}
+            {!gameState.isPutting ? (
               <button
                 onClick={rollDice}
                 disabled={gameState.gameOver || gameState.lastRoll !== null}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                className="w-full px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors text-sm sm:text-base"
               >
                 Roll Dice
               </button>
+            ) : (
+              <div className="w-full h-[36px] sm:h-[40px]" />
             )}
-            {!gameState.lastRoll && !gameState.gameOver && (
-              gameState.isPutting ? (
-                <button
-                  onClick={cancelPutting}
-                  className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  Cancel Putt
-                </button>
-              ) : (
-                <button
-                  onClick={startPutting}
-                  className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  Putt
-                </button>
-              )
-            )}
-            {!gameState.isPutting && (
+
+            {/* Top Right: Use Mulligan */}
+            {!gameState.isPutting ? (
               <button
                 onClick={useMulligan}
                 disabled={!canUseMulligan}
-                className="w-full px-4 py-2 bg-yellow-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-600 transition-colors"
+                className="w-full px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-600 transition-colors text-sm sm:text-base"
               >
                 {gameState.strokes === 0 && !gameState.hasUsedFreeTee 
                   ? 'Free Mulligan' 
                   : 'Use Mulligan'}
               </button>
+            ) : (
+              <div className="w-full h-[36px] sm:h-[40px]" />
             )}
+
+            {/* Bottom Left: Putt/Cancel */}
+            {!gameState.lastRoll && !gameState.gameOver ? (
+              <button
+                onClick={gameState.isPutting ? cancelPutting : startPutting}
+                className={`w-full px-3 sm:px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm sm:text-base ${
+                  gameState.isPutting ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+                }`}
+              >
+                {gameState.isPutting ? 'Cancel Putt' : 'Putt'}
+              </button>
+            ) : (
+              <div className="w-full h-[36px] sm:h-[40px]" />
+            )}
+
+            {/* Bottom Right: Reset Game */}
             <button
               onClick={resetGame}
-              className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              className="w-full px-3 sm:px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
             >
               Reset Game
             </button>
@@ -96,18 +102,8 @@ export const PaperGolfGame: React.FC = () => {
           validMoves={validMoves}
           puttableSquares={gameState.puttableSquares}
           onCellClick={handleMove}
+          gameState={gameState}
         />
-        
-        {gameState.gameOver && (
-          <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg">
-            <p className="font-bold">Hole in {gameState.strokes}!</p>
-            <p>
-              {gameState.strokes <= gameState.course.par 
-                ? 'Great job! You made par or better!' 
-                : `Try again to beat par (${gameState.course.par} strokes)!`}
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

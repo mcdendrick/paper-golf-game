@@ -10,4 +10,33 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Custom styles */
+.text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Card hover effect */
+.card-hover-effect {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Button hover animations */
+@keyframes button-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  }
+}
+
+.button-glow {
+  animation: button-glow 2s ease-in-out infinite;
 } 
