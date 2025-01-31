@@ -18,15 +18,92 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   puttableSquares,
   onCellClick,
 }) => {
-  const CELL_SIZE = 28; // Slightly larger cells
+  type PathDirection = { dx: number; dy: number };
+  
+  const isDirection = (value: unknown): value is PathDirection => {
+    if (!value || typeof value !== 'object' || value === null) return false;
+    return 'dx' in value && 'dy' in value;
+  };
+
+  const isPartOfPath = (x: number, y: number, pathType: 'dot' | 'line' | 'direction'): boolean | PathDirection | null => {
+    if (path.length === 0) return pathType === 'direction' ? null : false;
+
+    // Check if this position is a start or end point
+    if (pathType === 'dot') {
+      return path.some((segment, index) => {
+        const isStart = segment.from.x === x && segment.from.y === y;
+        const isEnd = segment.to.x === x && segment.to.y === y;
+        // Don't show end dot for current ball position
+        if (index === path.length - 1) {
+          return isStart;
+        }
+        return isStart || isEnd;
+      });
+    }
+
+    // For line segments, find which segment this point belongs to
+    const segment = path.find(segment => {
+      const { from, to } = segment;
+      
+      // Calculate the direction vector
+      const dx = Math.sign(to.x - from.x);
+      const dy = Math.sign(to.y - from.y);
+      
+      // If we're not in the bounding box of the line, return false
+      if (dx > 0 && (x < from.x || x > to.x)) return false;
+      if (dx < 0 && (x > from.x || x < to.x)) return false;
+      if (dy > 0 && (y < from.y || y > to.y)) return false;
+      if (dy < 0 && (y > from.y || y < to.y)) return false;
+
+      // Check if point lies on the line
+      if (dx === 0) return x === from.x;
+      if (dy === 0) return y === from.y;
+      
+      // For diagonal lines
+      const slope = (to.y - from.y) / (to.x - from.x);
+      const expectedY = from.y + slope * (x - from.x);
+      return Math.abs(y - expectedY) < 0.1;
+    });
+
+    if (!segment) return pathType === 'direction' ? null : false;
+
+    if (pathType === 'direction') {
+      const { from, to } = segment;
+      // Return the direction of the line for this point
+      const dx = Math.sign(to.x - from.x);
+      const dy = Math.sign(to.y - from.y);
+      return { dx, dy };
+    }
+
+    return true;
+  };
+
+  const getPathStyle = (x: number, y: number) => {
+    const direction = isPartOfPath(x, y, 'direction');
+    if (!direction || !isDirection(direction)) return '';
+
+    const { dx, dy } = direction;
+    let borderStyle = 'border-2 '; // Make borders thicker
+
+    // Determine which borders to show based on direction
+    if (dy !== 0) {
+      borderStyle += dy > 0 ? 'border-b-white border-b-[3px] ' : 'border-t-white border-t-[3px] ';
+    }
+    if (dx !== 0) {
+      borderStyle += dx > 0 ? 'border-r-white border-r-[3px] ' : 'border-l-white border-l-[3px] ';
+    }
+
+    return borderStyle;
+  };
 
   const getCellStyle = (x: number, y: number) => {
-    const cellType = grid[y][x]; // Note the y,x order for grid access
+    const cellType = grid[y][x];
     const isCurrentBall = ballPosition.x === x && ballPosition.y === y;
     const isValidMove = validMoves.some(move => move.x === x && move.y === y);
     const isPuttable = puttableSquares.some(square => square.x === x && square.y === y);
+    const pathStyle = getPathStyle(x, y);
     
-    const baseStyle = "w-7 h-7 border border-gray-300 cursor-pointer flex items-center justify-center relative";
+    const baseStyle = "w-7 h-7 border border-gray-700/20 cursor-pointer flex items-center justify-center relative";
     
     let backgroundColor = "bg-green-800"; // Rough
     if (cellType === CELL_TYPES.FAIRWAY) backgroundColor = "bg-green-500";
@@ -34,64 +111,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (cellType === CELL_TYPES.WATER) backgroundColor = "bg-blue-500";
     if (cellType === CELL_TYPES.TREE) backgroundColor = "bg-green-900";
     if (cellType === CELL_TYPES.HOLE) backgroundColor = "bg-black";
-    if (cellType === CELL_TYPES.START) backgroundColor = "bg-purple-500";
+    if (cellType === CELL_TYPES.START) backgroundColor = "bg-purple-500"; // Changed back to purple
     
     const highlightStyle = isValidMove ? 'ring-2 ring-yellow-300 ring-opacity-100 animate-pulse' : '';
     const puttableStyle = isPuttable ? 'ring-2 ring-green-300 ring-opacity-100' : '';
     const ballStyle = isCurrentBall ? 'ring-2 ring-white' : '';
     
-    return `${baseStyle} ${backgroundColor} ${highlightStyle} ${puttableStyle} ${ballStyle}`;
-  };
-
-  const renderPath = () => {
-    return path.map((segment, index) => {
-      const startX = segment.from.x * CELL_SIZE + CELL_SIZE/2;
-      const startY = segment.from.y * CELL_SIZE + CELL_SIZE/2;
-      const endX = segment.to.x * CELL_SIZE + CELL_SIZE/2;
-      const endY = segment.to.y * CELL_SIZE + CELL_SIZE/2;
-      
-      return (
-        <g key={index}>
-          <line
-            x1={startX}
-            y1={startY}
-            x2={endX}
-            y2={endY}
-            stroke="white"
-            strokeWidth="2"
-            strokeDasharray="4"
-            className="pointer-events-none"
-          />
-          <circle
-            cx={startX}
-            cy={startY}
-            r="2"
-            fill="white"
-            className="pointer-events-none"
-          />
-          <circle
-            cx={endX}
-            cy={endY}
-            r="2"
-            fill="white"
-            className="pointer-events-none"
-          />
-        </g>
-      );
-    });
+    return `${baseStyle} ${backgroundColor} ${pathStyle} ${highlightStyle} ${puttableStyle} ${ballStyle}`;
   };
 
   return (
     <div className="relative p-2">
-      <svg
-        className="absolute top-0 left-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 1 }}
-        viewBox={`0 0 ${CELL_SIZE * 20} ${CELL_SIZE * 15}`}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        {renderPath()}
-      </svg>
-      <div className="grid grid-rows-15 gap-0 relative w-fit" style={{ zIndex: 0 }}>
+      <div className="grid grid-rows-15 gap-0 relative w-fit">
         {grid.map((row, y) => (
           <div key={y} className="flex flex-row">
             {row.map((cell, x) => (
@@ -109,6 +140,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 {cell === CELL_TYPES.TREE && (
                   <span className="text-[10px]">🌲</span>
                 )}
+                {isPartOfPath(x, y, 'dot') && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-white" />
+                  </div>
+                )}
                 {validMoves.some(move => move.x === x && move.y === y) && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping" />
@@ -123,6 +159,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             ))}
           </div>
         ))}
+      </div>
+      <div className="mt-4">
+        <h3 className="font-bold mb-2">Legend:</h3>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>🟩 Fairway (+1 to roll)</div>
+          <div>🟨 Sand (-1 to roll)</div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-blue-500"></div>
+            <span>Water (cannot land)</span>
+          </div>
+          <div>🌲 Tree (cross from fairway)</div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-purple-500"></div>
+            <span>Starting Tee</span>
+          </div>
+        </div>
+        <div className="mt-2 text-sm text-gray-600">
+          <p>• Choose to putt (1 square) or roll dice for a longer shot</p>
+          <p>• You get 6 mulligans per round</p>
+          <p>• First tee shot gets a free mulligan</p>
+          <p>• Ball will go in hole if roll is exact or one over distance needed</p>
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ const MAX_MULLIGANS = 6;
 
 export const usePaperGolf = () => {
   const [gameState, setGameState] = useState<GameState>({
-    ballPosition: { x: 13, y: 1 }, // Start at bottom
+    ballPosition: { x: 10, y: 13 }, // Adjusted to match starting tee position
     strokes: 0,
     path: [],
     lastRoll: null,
@@ -155,6 +155,35 @@ export const usePaperGolf = () => {
     
     const validMoves: Position[] = [];
     
+    // First, find the hole position if it's within reach
+    let holePosition: Position | null = null;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue;
+        
+        // Check both exact distance and one over
+        for (const dist of [adjustedRoll, adjustedRoll - 1]) {
+          if (dist <= 0) continue;
+          
+          const newX = x + dx * dist;
+          const newY = y + dy * dist;
+          
+          if (newX >= 0 && newX < GRID_WIDTH && newY >= 0 && newY < GRID_HEIGHT) {
+            const targetCell = grid[newY][newX];
+            if (targetCell === CELL_TYPES.HOLE) {
+              holePosition = { x: newX, y: newY };
+            }
+          }
+        }
+      }
+    }
+
+    // If we found a hole within reach, that's our only valid move
+    if (holePosition) {
+      return [holePosition];
+    }
+    
+    // Otherwise, calculate normal valid moves
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         if (dx === 0 && dy === 0) continue;
@@ -165,8 +194,8 @@ export const usePaperGolf = () => {
         if (newX >= 0 && newX < GRID_WIDTH && newY >= 0 && newY < GRID_HEIGHT) {
           const targetCell = grid[newY][newX];
           
-          if (targetCell !== CELL_TYPES.WATER &&
-              (targetCell !== CELL_TYPES.TREE || currentCell === CELL_TYPES.FAIRWAY)) {
+          // Never allow landing on water or trees (even from fairway)
+          if (targetCell !== CELL_TYPES.WATER && targetCell !== CELL_TYPES.TREE) {
             validMoves.push({ x: newX, y: newY });
           }
         }
@@ -189,7 +218,10 @@ export const usePaperGolf = () => {
     if (!isPuttingMove && !isNormalMove) return;
     
     const newPath: PathSegment[] = [...gameState.path, {
-      from: { ...gameState.ballPosition },
+      from: { 
+        x: gameState.ballPosition.x,
+        y: gameState.ballPosition.y
+      },
       to: { x, y }
     }];
     
@@ -210,7 +242,7 @@ export const usePaperGolf = () => {
 
   const resetGame = useCallback(() => {
     setGameState({
-      ballPosition: { x: 13, y: 1 },
+      ballPosition: { x: 10, y: 13 }, // Adjusted to match starting tee position
       strokes: 0,
       path: [],
       lastRoll: null,

@@ -90,21 +90,6 @@ export const PaperGolfGame: React.FC = () => {
           onCellClick={handleMove}
         />
         
-        <div className="mt-4">
-          <h3 className="font-bold mb-2">Legend:</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>🟩 Fairway (+1 to roll)</div>
-            <div>🟨 Sand (-1 to roll)</div>
-            <div>🌊 Water (cannot land)</div>
-            <div>🌲 Tree (cross from fairway)</div>
-          </div>
-          <div className="mt-2 text-sm text-gray-600">
-            <p>• Choose to putt (1 square) or roll dice for a longer shot</p>
-            <p>• You get 6 mulligans per round</p>
-            <p>• First tee shot gets a free mulligan</p>
-          </div>
-        </div>
-        
         {gameState.gameOver && (
           <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg">
             <p className="font-bold">Hole in {gameState.strokes}!</p>
