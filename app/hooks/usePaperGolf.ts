@@ -7,7 +7,7 @@ const MAX_MULLIGANS = 6;
 
 export const usePaperGolf = () => {
   const [gameState, setGameState] = useState<GameState>({
-    ballPosition: { x: 10, y: 13 }, // Adjusted to match starting tee position
+    ballPosition: { x: 9, y: 13 }, // Adjusted to match new starting tee position
     strokes: 0,
     path: [],
     lastRoll: null,
@@ -20,7 +20,7 @@ export const usePaperGolf = () => {
       name: "Pine Valley",
       currentHole: 1,
       totalHoles: 18,
-      par: 6
+      par: 7  // Adjusted par for the more challenging layout
     }
   });
 
@@ -31,48 +31,105 @@ export const usePaperGolf = () => {
       Array(GRID_WIDTH).fill(CELL_TYPES.ROUGH)
     );
     
-    // Main fairway path
-    for (let y = 1; y < 14; y++) {
-      for (let x = 8; x < 12; x++) {
+    // Main fairway path - bottom section (wider starting area)
+    for (let y = 11; y < 14; y++) {
+      for (let x = 6; x < 12; x++) {
         initialGrid[y][x] = CELL_TYPES.FAIRWAY;
       }
     }
 
-    // Trees on left side
-    for (let y = 6; y < 10; y++) {
-      initialGrid[y][6] = CELL_TYPES.TREE;
-      initialGrid[y][7] = CELL_TYPES.TREE;
-    }
-    for (let y = 10; y < 12; y++) {
-      initialGrid[y][7] = CELL_TYPES.TREE;
+    // Main fairway path - first dogleg (right)
+    for (let y = 8; y < 11; y++) {
+      for (let x = 10; x < 15; x++) {
+        initialGrid[y][x] = CELL_TYPES.FAIRWAY;
+      }
     }
 
-    // Trees on right side
-    for (let y = 2; y < 5; y++) {
-      initialGrid[y][12] = CELL_TYPES.TREE;
-      initialGrid[y][13] = CELL_TYPES.TREE;
+    // Main fairway path - middle section (going left)
+    for (let y = 5; y < 8; y++) {
+      for (let x = 4; x < 12; x++) {
+        initialGrid[y][x] = CELL_TYPES.FAIRWAY;
+      }
     }
-    for (let y = 6; y < 9; y++) {
-      initialGrid[y][12] = CELL_TYPES.TREE;
+
+    // Main fairway path - final approach (right to green)
+    for (let y = 2; y < 5; y++) {
+      for (let x = 14; x < 18; x++) {
+        initialGrid[y][x] = CELL_TYPES.FAIRWAY;
+      }
+    }
+
+    // Connecting fairway between middle and final
+    for (let y = 3; y < 6; y++) {
+      for (let x = 11; x < 15; x++) {
+        initialGrid[y][x] = CELL_TYPES.FAIRWAY;
+      }
+    }
+
+    // Trees defining the course boundaries
+    // Bottom left forest
+    for (let y = 11; y < 14; y++) {
+      for (let x = 3; x < 6; x++) {
+        initialGrid[y][x] = CELL_TYPES.TREE;
+      }
+    }
+
+    // Right side forest (first dogleg)
+    for (let y = 9; y < 12; y++) {
+      for (let x = 15; x < 18; x++) {
+        initialGrid[y][x] = CELL_TYPES.TREE;
+      }
+    }
+
+    // Middle section forest
+    for (let y = 5; y < 8; y++) {
+      for (let x = 1; x < 4; x++) {
+        initialGrid[y][x] = CELL_TYPES.TREE;
+      }
+    }
+
+    // Top section forest
+    for (let y = 1; y < 4; y++) {
+      for (let x = 8; x < 11; x++) {
+        initialGrid[y][x] = CELL_TYPES.TREE;
+      }
     }
 
     // Water hazards
-    initialGrid[5][9] = CELL_TYPES.WATER;
-    initialGrid[5][10] = CELL_TYPES.WATER;
-    initialGrid[6][9] = CELL_TYPES.WATER;
-    initialGrid[6][10] = CELL_TYPES.WATER;
+    // Main water hazard (crossing middle section)
+    for (let x = 7; x < 10; x++) {
+      initialGrid[6][x] = CELL_TYPES.WATER;
+      initialGrid[7][x] = CELL_TYPES.WATER;
+    }
+
+    // Second water hazard (near green)
+    for (let y = 2; y < 4; y++) {
+      initialGrid[y][13] = CELL_TYPES.WATER;
+      initialGrid[y][14] = CELL_TYPES.WATER;
+    }
 
     // Sand traps
-    initialGrid[3][11] = CELL_TYPES.SAND;
-    initialGrid[4][11] = CELL_TYPES.SAND;
+    // Starting area sand traps
+    initialGrid[12][7] = CELL_TYPES.SAND;
+    initialGrid[12][8] = CELL_TYPES.SAND;
+    initialGrid[11][7] = CELL_TYPES.SAND;
+
+    // First dogleg sand traps
+    initialGrid[9][12] = CELL_TYPES.SAND;
+    initialGrid[9][13] = CELL_TYPES.SAND;
     
-    initialGrid[9][8] = CELL_TYPES.SAND;
-    initialGrid[10][8] = CELL_TYPES.SAND;
-    initialGrid[11][8] = CELL_TYPES.SAND;
+    // Middle section sand traps
+    initialGrid[5][5] = CELL_TYPES.SAND;
+    initialGrid[5][6] = CELL_TYPES.SAND;
+    
+    // Approach sand traps
+    initialGrid[3][15] = CELL_TYPES.SAND;
+    initialGrid[3][16] = CELL_TYPES.SAND;
+    initialGrid[4][16] = CELL_TYPES.SAND;
 
     // Hole and starting position
-    initialGrid[1][10] = CELL_TYPES.HOLE;   // Hole at top
-    initialGrid[13][10] = CELL_TYPES.START; // Start at bottom
+    initialGrid[2][16] = CELL_TYPES.HOLE;   // Hole at top-right
+    initialGrid[13][9] = CELL_TYPES.START;  // Start at bottom-center
     
     return initialGrid;
   });
@@ -248,7 +305,7 @@ export const usePaperGolf = () => {
 
   const resetGame = useCallback(() => {
     setGameState({
-      ballPosition: { x: 10, y: 13 },
+      ballPosition: { x: 9, y: 13 }, // Adjusted to match new starting tee position
       strokes: 0,
       path: [],
       lastRoll: null,
@@ -261,7 +318,7 @@ export const usePaperGolf = () => {
         name: "Pine Valley",
         currentHole: 1,
         totalHoles: 18,
-        par: 6
+        par: 7  // Adjusted par for the more challenging layout
       }
     });
     setValidMoves([]);
