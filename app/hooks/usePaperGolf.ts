@@ -15,7 +15,13 @@ export const usePaperGolf = () => {
     mulligansUsed: 0,
     hasUsedFreeTee: false,
     puttableSquares: [],
-    isPutting: false
+    isPutting: false,
+    course: {
+      name: "Pine Valley",
+      currentHole: 1,
+      totalHoles: 18,
+      par: 6
+    }
   });
 
   const [validMoves, setValidMoves] = useState<Position[]>([]);
@@ -242,7 +248,7 @@ export const usePaperGolf = () => {
 
   const resetGame = useCallback(() => {
     setGameState({
-      ballPosition: { x: 10, y: 13 }, // Adjusted to match starting tee position
+      ballPosition: { x: 10, y: 13 },
       strokes: 0,
       path: [],
       lastRoll: null,
@@ -250,7 +256,13 @@ export const usePaperGolf = () => {
       mulligansUsed: 0,
       hasUsedFreeTee: false,
       puttableSquares: [],
-      isPutting: false
+      isPutting: false,
+      course: {
+        name: "Pine Valley",
+        currentHole: 1,
+        totalHoles: 18,
+        par: 6
+      }
     });
     setValidMoves([]);
   }, []);

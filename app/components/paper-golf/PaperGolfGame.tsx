@@ -23,18 +23,26 @@ export const PaperGolfGame: React.FC = () => {
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="p-6">
         <div className="mb-4 flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Paper Golf</h2>
-            <p>Strokes: {gameState.strokes} {gameState.strokes > 6 ? '(Over Par)' : ''}</p>
-            <p>Mulligans: {6 - gameState.mulligansUsed} remaining</p>
-            {gameState.lastRoll && (
-              <p>Roll: {gameState.lastRoll} - Select a highlighted square to move</p>
-            )}
-            {gameState.isPutting && (
-              <p className="text-sm text-green-600">Select an adjacent square to putt to</p>
-            )}
+          <div className="w-[300px]">
+            <div className="flex items-center gap-4 mb-2">
+              <h2 className="text-2xl font-bold whitespace-nowrap">{gameState.course.name}</h2>
+              <span className="text-lg text-gray-600 whitespace-nowrap">
+                Hole {gameState.course.currentHole} of {gameState.course.totalHoles}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <p>Strokes: {gameState.strokes} {gameState.strokes > gameState.course.par ? '(Over Par)' : ''}</p>
+              <p className="text-gray-600">Par: {gameState.course.par}</p>
+              <p>Mulligans: {6 - gameState.mulligansUsed} remaining</p>
+              {gameState.lastRoll && (
+                <p>Roll: {gameState.lastRoll} - Select a highlighted square to move</p>
+              )}
+              {gameState.isPutting && (
+                <p className="text-sm text-green-600">Select an adjacent square to putt to</p>
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 w-[200px]">
             {!gameState.isPutting && (
               <button
                 onClick={rollDice}
@@ -94,9 +102,9 @@ export const PaperGolfGame: React.FC = () => {
           <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg">
             <p className="font-bold">Hole in {gameState.strokes}!</p>
             <p>
-              {gameState.strokes <= 6 
+              {gameState.strokes <= gameState.course.par 
                 ? 'Great job! You made par or better!' 
-                : 'Try again to beat par (6 strokes)!'}
+                : `Try again to beat par (${gameState.course.par} strokes)!`}
             </p>
           </div>
         )}

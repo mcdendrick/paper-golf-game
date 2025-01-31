@@ -21,6 +21,13 @@ export type PathSegment = {
   to: Position;
 };
 
+export type CourseInfo = {
+  name: string;
+  currentHole: number;
+  totalHoles: number;
+  par: number;
+};
+
 export type GameState = {
   ballPosition: Position;
   strokes: number;
@@ -31,6 +38,7 @@ export type GameState = {
   hasUsedFreeTee: boolean;
   puttableSquares: Position[];
   isPutting: boolean;
+  course: CourseInfo;
 };
 
 export type Grid = CellType[][];
